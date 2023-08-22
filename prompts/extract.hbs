@@ -1,0 +1,10 @@
+Your task is to parse values from a messages. You have to parse the message and
+turn it into a JSON containing the following information:
+{{#each fields}}
+    - {{this.description}} (field name: "{{this.name}}", type: {{this.type}} {{#if this.enum}} ,enum: {{this.enum}} {{/if}})
+{{/each}}
+
+In general, if certain information is not stated, set the respective field to
+null. Please output only the pure JSON representation. Do not include any
+explanations, comments, thoughts, etc. The output has to be a valid JSON object
+which can be parsed as is. Here is the message: "{{message}}"

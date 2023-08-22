@@ -1,0 +1,23 @@
+{
+  "name": "k_extract",
+  "title": "KnowledgeExtraction",
+  "description": "Start a knowledge extraction pipeline from the user's input",
+  "authors": [
+    {
+      "name": "Kael",
+      "email": "rahel.gunaratne@gmail.com"
+    }
+  ],
+  "version": "1.0",
+  "compatibility": {
+    "minimum": "0.9.3",
+    "verified": "0.9.3"
+  },
+  "prompts": [
+    "prompts/add_question.hbs",
+    "prompts/extract.hbs"
+  ],
+  "scripts": [
+    "scripts/k_extract.js"
+  ]
+}
