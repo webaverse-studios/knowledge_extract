@@ -43,7 +43,7 @@ export function handleStart(event) {
         }
     }
 
-    if (event.force!==false && event.force!==true){
+    if (event.force && event.force!==false && event.force!==true){
         errors.push("'force' must be a boolean", event.force);
     }
 
@@ -57,7 +57,7 @@ export function handleStart(event) {
     knowledge = event.requested_knowledge;
 
     // Set up types
-    force = event.force;
+    force = event.force || force;
 
     if (force){
         window.hooks.on("user_message", async (event) => await handleUserMessage(event));
@@ -96,22 +96,26 @@ function nullCheck(value){
 
 
 async function extract(message){
-    const fields = knowledge.filter(obj => !obj.value);
+    
+    const fields = [];
+    for (const [k, v] of Object.entries(knowledge)){
+        if (v.value !== undefined) continue; // If we already know the value, skip it
+        fields.push({name: k, type: v.type, description: v.description});
+    }
 
     const extractModel = window.models.CreateModel("GPT 3.5 Turbo");
 
     window.models.ApplyContextObject(extractModel, {fields, message});
-    window.prompts_llm.SetPrompt(extractModel, 'moemate-email:extract', { role: 'system' });
+    window.prompts_llm.SetPrompt(extractModel, 'k_extract:extract', { role: 'system' });
     const extracted = await window.models.CallModel(extractModel, {prompts: "extract"}, {timeout: 10000});
     window.models.DestroyModel(extractModel);
 
     let json = JSON.parse(extracted);
 
-    json = json.filter(obj => nullCheck(obj));
-
     for (let [k, v] of Object.entries(json)){
         if (!knowledge[k]) continue; // If we don't know about this field, skip it
         if (typeof(v) !== knowledge[k].type) continue; // If the type is wrong, skip it
+        if (nullCheck(v) === null) continue; // If the value is null, skip it
         knowledge[k].value = v; // Set the value
     }
 }
@@ -131,8 +135,8 @@ async function _handleSetPrompts(model, type) {
     switch (type) {
         case 'chat':
         case 'force questions and chat':
-            const recent_conversation = window.models.GetContextObject(model, 'recent_conversation');
-            const last_message = recent_conversation[recent_conversation.length - 1];
+            const recent_conversation = window.models.GetContextValue(model, "recent_conversation");
+            const last_message = recent_conversation[recent_conversation.length - 1].value;
 
             // Extract the knowledge from the message
             await extract(last_message);
